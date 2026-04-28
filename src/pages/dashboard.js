@@ -8,11 +8,11 @@ import Robot from './robot';
 import GestionUsuarios from './GestionUsuarios';
 
 /* ── Paleta oficial Universidad de Pamplona ── */
-const PRIMARY = '#003366';   /* azul marino — primario */
-const ACCENT  = '#AD3333';   /* burdeos — secundario   */
-const NEUTRAL = '#DADADA';   /* gris — neutro          */
-const GREEN   = '#1A9E5A';   /* operativo / éxito      */
-const WARN    = '#D48B00';   /* advertencia            */
+const PRIMARY = '#003366';
+const ACCENT  = '#AD3333';
+const NEUTRAL = '#DADADA';
+const GREEN   = '#1A9E5A';
+const WARN    = '#D48B00';
 const FONT    = "'Century Gothic', Candara, 'Trebuchet MS', sans-serif";
 const MONO    = "'Roboto Mono', monospace";
 
@@ -48,45 +48,65 @@ const SIDEBAR_ITEMS = {
 /* ─────────────────────────────────────────────
    BARRA SUPERIOR
 ───────────────────────────────────────────── */
-function TopBar({ user, hora, onLogout }) {
+function TopBar({ user, hora, onLogout, isMobile, onToggleSidebar }) {
   const meta = ROLE_META[user?.role] || ROLE_META.operario;
   return (
     <div style={{
-      background: PRIMARY, padding: '0 24px',
+      background: PRIMARY, padding: '0 16px',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       minHeight: '60px', position: 'sticky', top: 0, zIndex: 200,
       boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {isMobile && (
+          <button
+            onClick={onToggleSidebar}
+            style={{
+              background: 'none', border: 'none', color: '#FFF',
+              fontSize: '22px', cursor: 'pointer', padding: '4px 6px',
+              lineHeight: 1, flexShrink: 0
+            }}
+          >☰</button>
+        )}
         <img src="/logo_U_png.png" alt="UP" style={{
-          height: '34px', width: 'auto', objectFit: 'contain', display: 'block',
+          height: '32px', width: 'auto', objectFit: 'contain',
           filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.22))'
         }} />
-        <span style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: '600', fontFamily: FONT }}>
-          AS/RS · Sistema de Gestión de Almacén
-        </span>
+        {!isMobile && (
+          <span style={{ color: '#FFFFFF', fontSize: '15px', fontWeight: '600', fontFamily: FONT }}>
+            AS/RS · Sistema de Gestión de Almacén
+          </span>
+        )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', fontFamily: MONO }}>{hora}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '14px' }}>
+        {!isMobile && (
+          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', fontFamily: MONO }}>{hora}</span>
+        )}
         <span style={{
-          padding: '4px 12px', borderRadius: '8px',
+          padding: '4px 10px', borderRadius: '8px',
           background: meta.color, color: '#FFF',
-          fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px',
-          fontFamily: FONT
-        }}>{meta.label}</span>
-        <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', fontFamily: FONT }}>
-          {user?.nombre}
+          fontSize: '11px', fontWeight: '700', textTransform: 'uppercase',
+          letterSpacing: '0.5px', fontFamily: FONT, whiteSpace: 'nowrap'
+        }}>
+          {isMobile ? (user?.role === 'superadmin' ? 'SA' : user?.role === 'admin' ? 'ADM' : 'OP') : meta.label}
         </span>
+        {!isMobile && (
+          <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', fontFamily: FONT }}>
+            {user?.nombre}
+          </span>
+        )}
         <button onClick={onLogout} style={{
-          padding: '7px 14px', background: 'rgba(255,255,255,0.08)',
+          padding: isMobile ? '6px 10px' : '7px 14px',
+          background: 'rgba(255,255,255,0.08)',
           border: '1px solid rgba(255,255,255,0.2)', borderRadius: '7px',
-          color: '#FFF', fontSize: '12px', fontWeight: '500', cursor: 'pointer', fontFamily: FONT
+          color: '#FFF', fontSize: '12px', fontWeight: '500',
+          cursor: 'pointer', fontFamily: FONT, whiteSpace: 'nowrap'
         }}
-        onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.18)'}
-        onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.08)'}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
         >
-          Cerrar sesión
+          {isMobile ? 'Salir' : 'Cerrar sesión'}
         </button>
       </div>
     </div>
@@ -94,32 +114,60 @@ function TopBar({ user, hora, onLogout }) {
 }
 
 /* ─────────────────────────────────────────────
-   SIDEBAR (Todos los roles)
+   SIDEBAR
 ───────────────────────────────────────────── */
-function Sidebar({ role, activeSection, onNavigate }) {
+function Sidebar({ role, activeSection, onNavigate, isMobile, isOpen, onClose }) {
   const items = SIDEBAR_ITEMS[role] || [];
   return (
     <div style={{
-      width: '200px', flexShrink: 0,
-      background: '#FFFFFF', borderRight: '1px solid #DADADA',
-      position: 'sticky', top: '60px',
-      height: 'calc(100vh - 60px)', overflowY: 'auto',
-      boxShadow: '2px 0 8px rgba(0,51,102,0.05)'
+      width: '200px',
+      flexShrink: 0,
+      background: '#FFFFFF',
+      borderRight: '1px solid #DADADA',
+      position: isMobile ? 'fixed' : 'sticky',
+      top: isMobile ? 0 : '60px',
+      left: 0,
+      height: isMobile ? '100vh' : 'calc(100vh - 60px)',
+      overflowY: 'auto',
+      zIndex: isMobile ? 500 : 10,
+      boxShadow: isMobile ? '4px 0 24px rgba(0,0,0,0.18)' : '2px 0 8px rgba(0,51,102,0.05)',
+      transform: isMobile && !isOpen ? 'translateX(-100%)' : 'translateX(0)',
+      transition: 'transform 0.25s ease',
     }}>
-      <div style={{ padding: '16px 12px 8px' }}>
-        <p style={{
-          margin: 0, fontSize: '10px', fontWeight: '700', color: '#AAAAAA',
-          textTransform: 'uppercase', letterSpacing: '0.8px', padding: '0 8px 8px', fontFamily: FONT
-        }}>Módulos</p>
+      {isMobile && (
+        <div style={{
+          padding: '14px 16px 12px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          borderBottom: '1px solid #EBEBEB', background: PRIMARY
+        }}>
+          <span style={{ fontSize: '13px', fontWeight: '700', color: '#FFF', fontFamily: FONT }}>
+            Menú
+          </span>
+          <button onClick={onClose} style={{
+            background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+            borderRadius: '6px', color: '#FFF', fontSize: '16px',
+            cursor: 'pointer', padding: '2px 8px', lineHeight: 1
+          }}>✕</button>
+        </div>
+      )}
+
+      <div style={{ padding: isMobile ? '10px 12px' : '16px 12px 8px' }}>
+        {!isMobile && (
+          <p style={{
+            margin: 0, fontSize: '10px', fontWeight: '700', color: '#AAAAAA',
+            textTransform: 'uppercase', letterSpacing: '0.8px',
+            padding: '0 8px 8px', fontFamily: FONT
+          }}>Módulos</p>
+        )}
         {items.map(item => {
           const active = activeSection === item.key;
           return (
             <button
               key={item.key}
-              onClick={() => onNavigate(item.key)}
+              onClick={() => { onNavigate(item.key); if (isMobile) onClose(); }}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center',
-                gap: '10px', padding: '10px 12px', borderRadius: '8px',
+                gap: '10px', padding: '11px 12px', borderRadius: '8px',
                 border: 'none', cursor: 'pointer', textAlign: 'left',
                 background: active ? 'rgba(0,51,102,0.08)' : 'transparent',
                 color: active ? PRIMARY : '#555555',
@@ -155,15 +203,15 @@ function Sidebar({ role, activeSection, onNavigate }) {
 /* ─────────────────────────────────────────────
    VISTA OPERARIO
 ───────────────────────────────────────────── */
-function OperarioView({ datos, hora, estadoSistema, conexion }) {
+function OperarioView({ datos, hora, estadoSistema, conexion, isMobile }) {
   const { ocupacion, robotsActivos, dispensa, recepcion, alarmas } = datos;
   const hayAlarmas = estadoSistema.alarmasActivas > 0;
   const sistemaOk  = estadoSistema.estado === 'normal';
 
   return (
-    <div style={{ padding: '24px 28px 48px', maxWidth: '1100px', margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-        <h1 style={{ margin: 0, color: PRIMARY, fontSize: '22px', fontWeight: '700', fontFamily: FONT }}>
+    <div style={{ padding: isMobile ? '16px' : '24px 28px 48px', maxWidth: '1100px', margin: '0 auto' }}>
+      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <h1 style={{ margin: 0, color: PRIMARY, fontSize: isMobile ? '18px' : '22px', fontWeight: '700', fontFamily: FONT }}>
           Panel de Control Operativo
         </h1>
         <p style={{ margin: '6px 0 0', color: '#777', fontSize: '13px', fontFamily: FONT }}>
@@ -172,8 +220,10 @@ function OperarioView({ datos, hora, estadoSistema, conexion }) {
       </div>
 
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-        gap: '14px', marginBottom: '24px'
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(190px, 1fr))',
+        gap: isMobile ? '10px' : '14px',
+        marginBottom: '24px'
       }}>
         <StatusCard label="Nivel de Ocupación"     value={ocupacion.value}     sub={ocupacion.footer}     color={PRIMARY} icon="📦" />
         <StatusCard label="Robots Activos"          value={robotsActivos.value} sub={robotsActivos.footer} color={PRIMARY} icon="🤖" />
@@ -190,15 +240,15 @@ function OperarioView({ datos, hora, estadoSistema, conexion }) {
 
       <div style={{
         background: '#FFFFFF', border: '1px solid #DADADA', borderRadius: '14px',
-        padding: '20px 28px', boxShadow: '0 2px 10px rgba(0,51,102,0.06)'
+        padding: isMobile ? '16px' : '20px 28px', boxShadow: '0 2px 10px rgba(0,51,102,0.06)'
       }}>
         <h2 style={{ margin: '0 0 14px', color: PRIMARY, fontSize: '16px', fontWeight: '600', fontFamily: FONT }}>
           📡 Estado de Conexión
         </h2>
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 20px',
-            borderRadius: '10px', flex: '1', minWidth: '200px',
+            borderRadius: '10px', flex: '1',
             background: conexion === 'estable' ? 'rgba(26,158,90,0.07)' : 'rgba(173,51,51,0.07)',
             border: `1px solid ${conexion === 'estable' ? 'rgba(26,158,90,0.3)' : 'rgba(173,51,51,0.3)'}`
           }}>
@@ -219,7 +269,7 @@ function OperarioView({ datos, hora, estadoSistema, conexion }) {
           </div>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 20px',
-            borderRadius: '10px', flex: '1', minWidth: '200px',
+            borderRadius: '10px', flex: '1',
             background: 'rgba(0,51,102,0.05)', border: '1px solid rgba(0,51,102,0.15)'
           }}>
             <span style={{ fontSize: '24px' }}>🏭</span>
@@ -238,15 +288,15 @@ function StatusCard({ label, value, sub, color, icon }) {
   return (
     <div style={{
       background: '#FFFFFF', borderLeft: `4px solid ${color}`,
-      border: `1px solid ${color}22`, borderRadius: '12px', padding: '16px 18px',
+      border: `1px solid ${color}22`, borderRadius: '12px', padding: '14px 16px',
       boxShadow: '0 2px 8px rgba(0,51,102,0.06)'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '8px' }}>
-        <span style={{ fontSize: '18px' }}>{icon}</span>
-        <span style={{ fontSize: '12px', color: '#777', fontWeight: '500', fontFamily: FONT }}>{label}</span>
+        <span style={{ fontSize: '16px' }}>{icon}</span>
+        <span style={{ fontSize: '11px', color: '#777', fontWeight: '500', fontFamily: FONT }}>{label}</span>
       </div>
-      <p style={{ margin: 0, fontSize: '20px', fontWeight: '700', color, fontFamily: MONO, lineHeight: 1 }}>{value}</p>
-      <p style={{ margin: '5px 0 0', fontSize: '12px', color: '#777', fontFamily: FONT }}>{sub}</p>
+      <p style={{ margin: 0, fontSize: '18px', fontWeight: '700', color, fontFamily: MONO, lineHeight: 1 }}>{value}</p>
+      <p style={{ margin: '5px 0 0', fontSize: '11px', color: '#777', fontFamily: FONT }}>{sub}</p>
     </div>
   );
 }
@@ -254,7 +304,7 @@ function StatusCard({ label, value, sub, color, icon }) {
 /* ─────────────────────────────────────────────
    VISTA ADMIN
 ───────────────────────────────────────────── */
-function AdminView({ datos, estadoSistema, conexion, hora }) {
+function AdminView({ datos, estadoSistema, conexion, hora, isMobile }) {
   const { ocupacion, robotsActivos, dispensa, recepcion, alarmas } = datos;
 
   const metricas = [
@@ -272,13 +322,13 @@ function AdminView({ datos, estadoSistema, conexion, hora }) {
   ];
 
   const panel = { background: '#FFF', border: '1px solid #DADADA', borderRadius: '12px',
-    padding: '20px 22px', boxShadow: '0 2px 8px rgba(0,51,102,0.05)' };
-  const panelTitle = { margin: '0 0 18px', color: PRIMARY, fontSize: '15px', fontWeight: '600', fontFamily: FONT };
+    padding: isMobile ? '14px' : '20px 22px', boxShadow: '0 2px 8px rgba(0,51,102,0.05)' };
+  const panelTitle = { margin: '0 0 14px', color: PRIMARY, fontSize: '15px', fontWeight: '600', fontFamily: FONT };
 
   return (
-    <div style={{ padding: '24px 24px 48px', flex: 1 }}>
-      <div style={{ marginBottom: '20px' }}>
-        <h1 style={{ margin: 0, color: PRIMARY, fontSize: '20px', fontWeight: '700', fontFamily: FONT }}>
+    <div style={{ padding: isMobile ? '14px' : '24px 24px 48px', flex: 1 }}>
+      <div style={{ marginBottom: '16px' }}>
+        <h1 style={{ margin: 0, color: PRIMARY, fontSize: isMobile ? '17px' : '20px', fontWeight: '700', fontFamily: FONT }}>
           Panel de Administración
         </h1>
         <p style={{ margin: '4px 0 0', color: '#777', fontSize: '13px', fontFamily: FONT }}>
@@ -286,7 +336,11 @@ function AdminView({ datos, estadoSistema, conexion, hora }) {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '10px', marginBottom: '20px' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)',
+        gap: '10px', marginBottom: '16px'
+      }}>
         {[
           { icon: '📦', title: 'Ocupación', ...ocupacion },
           { icon: '🤖', title: 'Robots',    ...robotsActivos },
@@ -309,7 +363,11 @@ function AdminView({ datos, estadoSistema, conexion, hora }) {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '16px', marginBottom: '16px' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 320px',
+        gap: '16px', marginBottom: '16px'
+      }}>
         <div style={panel}>
           <h2 style={panelTitle}>📈 Métricas del Proceso</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -359,9 +417,9 @@ function AdminView({ datos, estadoSistema, conexion, hora }) {
         </div>
       </div>
 
-      <div style={{ ...panel }}>
+      <div style={{ ...panel, overflowX: 'auto' }}>
         <h2 style={panelTitle}>🕐 Análisis de Turnos del Día</h2>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '400px' }}>
           <thead>
             <tr style={{ background: '#F5F7FA' }}>
               {['Turno', 'Horario', 'Pedidos', 'Eficiencia', 'Estado'].map(h => (
@@ -394,7 +452,7 @@ function AdminView({ datos, estadoSistema, conexion, hora }) {
 /* ─────────────────────────────────────────────
    VISTA SUPER ADMIN
 ───────────────────────────────────────────── */
-function SuperAdminView({ datos, estadoSistema, conexion, hora, currentUser }) {
+function SuperAdminView({ datos, estadoSistema, conexion, hora, currentUser, isMobile }) {
   const { ocupacion, robotsActivos, dispensa, recepcion, alarmas } = datos;
 
   const conexiones = [
@@ -417,13 +475,13 @@ function SuperAdminView({ datos, estadoSistema, conexion, hora, currentUser }) {
   ];
 
   const panel = { background: '#FFF', border: '1px solid #DADADA', borderRadius: '12px',
-    padding: '18px 20px', boxShadow: '0 2px 8px rgba(0,51,102,0.05)' };
+    padding: isMobile ? '14px' : '18px 20px', boxShadow: '0 2px 8px rgba(0,51,102,0.05)' };
   const panelTitle = { margin: '0 0 14px', color: PRIMARY, fontSize: '14px', fontWeight: '600', fontFamily: FONT };
 
   return (
-    <div style={{ padding: '24px 24px 48px', flex: 1 }}>
-      <div style={{ marginBottom: '20px' }}>
-        <h1 style={{ margin: 0, color: PRIMARY, fontSize: '20px', fontWeight: '700', fontFamily: FONT }}>
+    <div style={{ padding: isMobile ? '14px' : '24px 24px 48px', flex: 1 }}>
+      <div style={{ marginBottom: '16px' }}>
+        <h1 style={{ margin: 0, color: PRIMARY, fontSize: isMobile ? '17px' : '20px', fontWeight: '700', fontFamily: FONT }}>
           Centro de Operaciones — Super Admin
         </h1>
         <p style={{ margin: '4px 0 0', color: '#777', fontSize: '13px', fontFamily: FONT }}>
@@ -431,7 +489,11 @@ function SuperAdminView({ datos, estadoSistema, conexion, hora, currentUser }) {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: '10px', marginBottom: '16px' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(5, 1fr)',
+        gap: '10px', marginBottom: '14px'
+      }}>
         {[
           { icon: '📦', title: 'Ocupación', ...ocupacion },
           { icon: '🤖', title: 'Robots',    ...robotsActivos },
@@ -453,7 +515,11 @@ function SuperAdminView({ datos, estadoSistema, conexion, hora, currentUser }) {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 260px', gap: '14px', marginBottom: '14px' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 260px',
+        gap: '14px', marginBottom: '14px'
+      }}>
         <div style={panel}>
           <h3 style={panelTitle}>🖥️ Información del Sistema</h3>
           {sysInfo.map((s, i) => (
@@ -482,7 +548,11 @@ function SuperAdminView({ datos, estadoSistema, conexion, hora, currentUser }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        gap: '14px'
+      }}>
         <div style={panel}>
           <h3 style={panelTitle}>📈 Métricas del Proceso</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
@@ -504,9 +574,9 @@ function SuperAdminView({ datos, estadoSistema, conexion, hora, currentUser }) {
           </div>
         </div>
 
-        <div style={{ ...panel, border: '1px solid rgba(173,51,51,0.2)' }}>
+        <div style={{ ...panel, border: '1px solid rgba(173,51,51,0.2)', overflowX: 'auto' }}>
           <h3 style={{ ...panelTitle, color: ACCENT }}>👥 Gestión de Usuarios</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '280px' }}>
             <thead>
               <tr style={{ background: '#F5F7FA' }}>
                 {['Usuario', 'Rol', 'Nivel', 'Estado'].map(h => (
@@ -604,16 +674,29 @@ export default function Dashboard({
   const role = user?.role || 'operario';
 
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [hora, setHora] = useState(
     ultimaActualizacionProp || new Date().toLocaleTimeString('es-ES', {
       hour: '2-digit', minute: '2-digit', second: '2-digit'
     })
   );
+
   useEffect(() => {
     const id = setInterval(() => setHora(
       new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' })
     ), 1000);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   function handleLogout() { logout(); navigate('/login', { replace: true }); }
@@ -629,19 +712,39 @@ export default function Dashboard({
       case 'usuarios':       return <GestionUsuarios />;
       default:
         if (role === 'admin')
-          return <AdminView datos={datos} estadoSistema={estadoSistema} conexion={conexion} hora={hora} />;
+          return <AdminView datos={datos} estadoSistema={estadoSistema} conexion={conexion} hora={hora} isMobile={isMobile} />;
         if (role === 'superadmin')
-          return <SuperAdminView datos={datos} estadoSistema={estadoSistema} conexion={conexion} hora={hora} currentUser={user} />;
-        return <OperarioView datos={datos} hora={hora} estadoSistema={estadoSistema} conexion={conexion} />;
+          return <SuperAdminView datos={datos} estadoSistema={estadoSistema} conexion={conexion} hora={hora} currentUser={user} isMobile={isMobile} />;
+        return <OperarioView datos={datos} hora={hora} estadoSistema={estadoSistema} conexion={conexion} isMobile={isMobile} />;
     }
   }
 
   return (
     <div style={{ background: '#F0F2F5', minHeight: '100vh', fontFamily: FONT }}>
-      <TopBar user={user} hora={hora} onLogout={handleLogout} />
-      <div style={{ display: 'flex', minHeight: 'calc(100vh - 60px)' }}>
-        <Sidebar role={role} activeSection={activeSection} onNavigate={setActiveSection} />
-        <div style={{ flex: 1, overflow: 'auto' }}>
+      <TopBar
+        user={user} hora={hora} onLogout={handleLogout}
+        isMobile={isMobile} onToggleSidebar={() => setSidebarOpen(v => !v)}
+      />
+      <div style={{ display: 'flex', minHeight: 'calc(100vh - 60px)', position: 'relative' }}>
+        {/* Overlay backdrop en mobile */}
+        {isMobile && sidebarOpen && (
+          <div
+            onClick={() => setSidebarOpen(false)}
+            style={{
+              position: 'fixed', inset: 0,
+              background: 'rgba(0,0,0,0.45)', zIndex: 499
+            }}
+          />
+        )}
+        <Sidebar
+          role={role}
+          activeSection={activeSection}
+          onNavigate={setActiveSection}
+          isMobile={isMobile}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+        <div style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
           {renderContent()}
         </div>
       </div>

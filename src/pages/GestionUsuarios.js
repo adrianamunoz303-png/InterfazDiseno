@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const PRIMARY = '#003366';
@@ -18,7 +18,14 @@ const EMPTY_FORM = { nombre: '', username: '', password: '', confirmar: '', role
 
 export default function GestionUsuarios() {
   const { users, user: currentUser, addUser, deleteUser } = useAuth();
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [form, setForm] = useState(EMPTY_FORM);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [showPasswords, setShowPasswords] = useState({});
@@ -85,7 +92,7 @@ export default function GestionUsuarios() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '24px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: '24px', alignItems: 'start' }}>
 
         {/* ── Panel de creación ── */}
         <div style={{ background: '#FFF', border: '1px solid #DADADA', borderRadius: '14px',

@@ -54,3 +54,27 @@ body {
 }
 
 code { font-family: var(--font-mono); }
+
+/* ── Responsive global ── */
+@media (max-width: 768px) {
+  .alm-columns {
+    flex-direction: column !important;
+  }
+  .alm-card-category {
+    flex: 1 1 100% !important;
+  }
+  .box-wrapper {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .alm-info-bar {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .alm-categories-summary {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

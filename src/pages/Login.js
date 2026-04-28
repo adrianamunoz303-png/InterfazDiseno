@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,6 +14,13 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -67,12 +74,15 @@ export default function Login() {
 
       {/* Layout: panel izquierdo + card */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: '52px',
-        zIndex: 1, width: '100%', maxWidth: '860px', padding: '24px'
+        display: 'flex', alignItems: 'center',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '20px' : '52px',
+        zIndex: 1, width: '100%', maxWidth: '860px',
+        padding: isMobile ? '16px' : '24px'
       }}>
 
-        {/* Panel izquierdo — branding */}
-        <div style={{ flex: '1', display: 'flex', flexDirection: 'column',
+        {/* Panel izquierdo — branding (oculto en mobile) */}
+        <div style={{ flex: '1', display: isMobile ? 'none' : 'flex', flexDirection: 'column',
           alignItems: 'flex-start', gap: '22px', color: '#FFFFFF' }}>
 
           <img src="/logo_U_png.png" alt="Universidad de Pamplona"
@@ -109,7 +119,8 @@ export default function Login() {
         <div style={{
           background: 'rgba(255,255,255,0.97)', borderRadius: '20px',
           boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
-          width: '100%', maxWidth: '370px', overflow: 'hidden', flexShrink: 0
+          width: '100%', maxWidth: isMobile ? '100%' : '370px',
+          overflow: 'hidden', flexShrink: 0
         }}>
           {/* Header card */}
           <div style={{ background: PRIMARY, padding: '28px 36px 22px', textAlign: 'center' }}>
