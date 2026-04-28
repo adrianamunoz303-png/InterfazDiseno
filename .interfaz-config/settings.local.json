@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd \"c:\\\\Users\\\\adria\\\\OneDrive\\\\Documentos\\\\InterfazDise-o-main\\\\InterfazDise-o-main\"; $env:PORT=8080; npm start)"
+    ]
+  }
+}
