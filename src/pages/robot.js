@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import PageHeader from '../components/common/PageHeader';
+
+const PRIMARY = '#003366';
+const ACCENT  = '#AD3333';
+const WARN    = '#D48B00';
+const FONT    = "'Century Gothic', Candara, 'Trebuchet MS', sans-serif";
 
 export default function Robot() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(
     new Date().toLocaleTimeString('es-ES', {
@@ -34,16 +36,7 @@ export default function Robot() {
     user?.role === 'superadmin' ? 'SUPERADMIN' : user?.role === 'admin' ? 'ADMIN' : 'OPERADOR';
 
   return (
-    <div style={{ background: '#F0F2F5', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
-      <PageHeader
-        icon="🤖"
-        title="Control de Robots"
-        subtitle="Supervisión y telemetría del sistema automatizado"
-        userLevel={userLevel}
-        userLevelNumber={userLevelNumber}
-        time={currentTime}
-      />
-
+    <div style={{ background: '#F5F5F5', minHeight: '100vh', fontFamily: FONT }}>
       <div
         style={{
           maxWidth: '900px',
@@ -66,9 +59,10 @@ export default function Robot() {
           <h1
             style={{
               margin: '0 0 12px',
-              color: '#003366',
+              color: PRIMARY,
               fontSize: '24px',
-              fontWeight: '700'
+              fontWeight: '700',
+              fontFamily: FONT
             }}
           >
             Módulo de Control de Robots
@@ -107,7 +101,7 @@ export default function Robot() {
                 }}
               >
                 <div style={{ fontSize: '24px', marginBottom: '8px' }}>{f.icon}</div>
-                <p style={{ margin: '0 0 4px', fontWeight: '600', fontSize: '13px', color: '#003366' }}>
+                <p style={{ margin: '0 0 4px', fontWeight: '700', fontSize: '13px', color: PRIMARY, fontFamily: FONT }}>
                   {f.titulo}
                 </p>
                 <p style={{ margin: 0, fontSize: '12px', color: '#777' }}>{f.desc}</p>
@@ -122,40 +116,17 @@ export default function Robot() {
               gap: '8px',
               padding: '10px 20px',
               borderRadius: '8px',
-              background: 'rgba(212,139,0,0.08)',
-              border: '1px solid rgba(212,139,0,0.3)'
+              background: `rgba(212,139,0,0.08)`,
+              border: `1px solid rgba(212,139,0,0.3)`
             }}
           >
             <span style={{ fontSize: '16px' }}>⚙️</span>
-            <span style={{ color: '#D48B00', fontSize: '13px', fontWeight: '600' }}>
+            <span style={{ color: WARN, fontSize: '13px', fontWeight: '700', fontFamily: FONT }}>
               En desarrollo - Etapa 3
             </span>
           </div>
 
-          <div style={{ marginTop: '32px' }}>
-            <button
-              onClick={() => navigate('/')}
-              style={{
-                padding: '12px 28px',
-                background: '#003366',
-                color: '#FFF',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                fontFamily: 'Inter, sans-serif'
-              }}
-            >
-              Volver al Dashboard
-            </button>
-          </div>
         </div>
-
-        <p style={{ marginTop: '20px', color: '#999', fontSize: '12px' }}>
-          Usuario: <strong style={{ color: '#555' }}>{user?.nombre}</strong>
-          {' · '}Nivel {userLevelNumber}
-        </p>
       </div>
     </div>
   );

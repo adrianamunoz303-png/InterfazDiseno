@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import PageHeader from '../components/common/PageHeader';
 import useAlmacen from "../hooks/useAlmacen";
 import useFifo from "../hooks/useFifo";
 
@@ -94,15 +93,6 @@ export default function Dispensa() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f5f5" }}>
-      <PageHeader
-        icon="📦"
-        title="Gestión de Dispensa"
-        subtitle="Solicitar productos y gestionar salidas del almacén"
-        userLevel="OPERADOR"
-        userLevelNumber="1"
-        time={currentTime}
-      />
-
       {/* CONTENT */}
       <div style={{ padding: "30px" }}>
         

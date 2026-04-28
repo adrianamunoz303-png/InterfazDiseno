@@ -1,8 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Paleta institucional */
+  /* ── Paleta oficial Universidad de Pamplona ── */
+  --up-navy:    #003366;   /* azul marino — color primario */
+  --up-wine:    #AD3333;   /* burdeos — color secundario  */
+  --up-neutral: #DADADA;   /* gris claro — neutro         */
+
+  /* Semánticos */
   --color-primary:   #003366;
+  --color-secondary: #AD3333;
   --color-critical:  #AD3333;
   --color-neutral:   #DADADA;
   --color-ok:        #1A9E5A;
@@ -10,7 +16,7 @@
 
   /* Superficies */
   --color-surface:     #FFFFFF;
-  --color-surface-alt: #F5F5F5;
+  --color-surface-alt: #F0F2F5;
   --color-border:      #DADADA;
 
   /* Texto */
@@ -19,8 +25,8 @@
   --color-text-meta:      #555555;
   --color-text-on-dark:   #FFFFFF;
 
-  /* Tipografía */
-  --font-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Tipografía institucional */
+  --font-base: 'Century Gothic', Candara, 'Trebuchet MS', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'Roboto Mono', 'Courier New', monospace;
 
   /* Tamaños */
@@ -34,9 +40,7 @@
   --text-kpi:  22px;
 }
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -49,6 +53,4 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: var(--font-mono);
-}
+code { font-family: var(--font-mono); }

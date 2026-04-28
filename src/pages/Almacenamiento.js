@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import CardElements from "../components/common/CardElements";
-import PageHeader from "../components/common/PageHeader";
 import useAlmacen from "../hooks/useAlmacen";
 
 export default function Almacenamiento() {
@@ -54,15 +53,6 @@ export default function Almacenamiento() {
 
   return (
     <div className="almacenamiento-container">
-      <PageHeader
-        icon="📦"
-        title="Gestión de Almacenamiento"
-        subtitle="Control de inventario por categorías"
-        userLevel="OPERADOR"
-        userLevelNumber="1"
-        time={currentTime}
-      />
-
       <div className="almacenamiento-content">
         <div className="alm-section">
           <h3>Porcentaje de Ocupación</h3>

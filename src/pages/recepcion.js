@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import PageHeader from '../components/common/PageHeader';
 import StationStatus from '../components/recepcion/StationStatus';
 import ProductQueue from '../components/recepcion/ProductQueue';
 import QRScanner from '../components/recepcion/QRScanner';
@@ -41,15 +40,6 @@ export default function Recepcion() {
       minHeight: "100vh",
       background: "#f5f5f5"
     }}>
-      <PageHeader
-        icon="📦"
-        title="Área de Recepción"
-        subtitle="Control y Supervisión de Entrada"
-        userLevel="OPERADOR"
-        userLevelNumber="1"
-        time="22:07:28"
-      />
-
       {/* CONTENT */}
       <div style={{padding: "30px"}}>
         
