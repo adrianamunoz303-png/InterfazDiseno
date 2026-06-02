@@ -69,13 +69,13 @@ export default function GestionUsuarios() {
     return e;
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setSuccess('');
     const e2 = validate();
     if (Object.keys(e2).length) { setErrors(e2); return; }
     setErrors({});
-    const result = addUser({ nombre: form.nombre, username: form.username, password: form.password, role: form.role });
+    const result = await addUser({ nombre: form.nombre, username: form.username, password: form.password, role: form.role });
     if (result.ok) {
       setSuccess(`Usuario "${form.username}" creado exitosamente`);
       setForm(EMPTY_FORM);

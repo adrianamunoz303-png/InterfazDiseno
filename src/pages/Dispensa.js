@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { crearProductoEnInventario } from '../services/api';
 
 const PRIMARY = '#003366';
 const ACCENT  = '#AD3333';
@@ -64,19 +65,11 @@ export default function Dispensa() {
     let posicion  = null;
 
     try {
-      // Enviar código al backend — guarda en tabla inventory
-      const res = await fetch('http://localhost:8000/ordenar_paquete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo: form.codigo.trim(), peso: Number(form.peso) }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        idBackend = data.id_paquete;
-        posicion  = data.asignacion_fifo
-          ? `(${data.asignacion_fifo.x}, ${data.asignacion_fifo.y})`
-          : '—';
-      }
+      const data = await crearProductoEnInventario(form.codigo.trim(), Number(form.peso));
+      idBackend = data.id_paquete;
+      posicion  = data.asignacion_fifo
+        ? `(${data.asignacion_fifo.x}, ${data.asignacion_fifo.y})`
+        : '—';
     } catch {
       // Backend no disponible — solo guarda localmente
     }

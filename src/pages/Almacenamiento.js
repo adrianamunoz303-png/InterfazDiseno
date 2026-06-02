@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { obtenerInventario } from '../services/api';
 
 const PRIMARY  = '#003366';
 const ACCENT   = '#AD3333';
@@ -58,12 +59,9 @@ export default function Almacenamiento() {
 
   const fetchInventario = useCallback(async () => {
     try {
-      const res  = await fetch("http://localhost:8000/inventario");
-      if (!res.ok) throw new Error("error");
-      const data = await res.json();
+      const data = await obtenerInventario();
       setInventario(data.inventario || []);
     } catch {
-      // Backend no disponible — mostrar datos de prueba
       setInventario(MOCK);
     } finally {
       setCargando(false);
