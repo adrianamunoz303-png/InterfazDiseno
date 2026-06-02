@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { API_URL } from '../config/api';
+import { obtenerUsuarios, eliminarUsuarioBackend } from '../services/api';
 
 const DEFAULT_USERS = [
   { id: 1, username: 'superadmin', password: 'SA@2025!',  role: 'superadmin', nombre: 'Super Administrador', nivelAcceso: 3, intentosFallidos: 0, bloqueado: false },
@@ -6,19 +8,15 @@ const DEFAULT_USERS = [
   { id: 3, username: 'operario',   password: 'Op@2025!',  role: 'operario',   nombre: 'Operario',            nivelAcceso: 1, intentosFallidos: 0, bloqueado: false },
 ];
 
+function nivelPorRol(role) {
+  return role === 'superadmin' ? 3 : role === 'admin' ? 2 : 1;
+}
+
 function loadUsers() {
   try {
     const saved = localStorage.getItem('asrs_users');
     let users = saved ? JSON.parse(saved) : DEFAULT_USERS;
-    
-    // Forzar el desbloqueo general para resetear el estado guardado del usuario local
-    users = users.map(u => ({
-      ...u,
-      intentosFallidos: 0,
-      bloqueado: false,
-    }));
-    
-    // Guardar el estado limpio para que quede permanente
+    users = users.map(u => ({ ...u, intentosFallidos: 0, bloqueado: false }));
     localStorage.setItem('asrs_users', JSON.stringify(users));
     return users;
   } catch {
@@ -41,115 +39,172 @@ export function AuthProvider({ children }) {
     } catch { return null; }
   });
 
+  // Sincroniza la lista de usuarios con la BD solo cuando ya hay sesion activa.
+  // Asi evitamos llamadas no autenticadas al arrancar la app.
+  useEffect(() => {
+    if (!user?.token) return;
+
+    async function syncFromBackend() {
+      try {
+        const backendUsers = await obtenerUsuarios();
+        setUsers(prev => {
+          const merged = [...prev];
+          for (const bu of backendUsers) {
+            const idx = merged.findIndex(u => u.username === bu.username);
+            if (idx >= 0) {
+              merged[idx] = { ...merged[idx], backend_id: bu.id };
+            } else {
+              merged.push({
+                id: Date.now() + Math.random(),
+                username: bu.username,
+                nombre: bu.username,
+                password: '(protegida)',
+                role: bu.role,
+                nivelAcceso: nivelPorRol(bu.role),
+                intentosFallidos: 0,
+                bloqueado: false,
+                backend_id: bu.id,
+              });
+            }
+          }
+          return merged;
+        });
+      } catch {
+        // Backend no disponible o token invalido — continuar con datos locales
+      }
+    }
+    syncFromBackend();
+  }, [user]);   // se re-ejecuta cada vez que cambia el usuario autenticado
+
   useEffect(() => {
     if (user) sessionStorage.setItem('asrs_user', JSON.stringify(user));
     else sessionStorage.removeItem('asrs_user');
   }, [user]);
 
-  useEffect(() => {
-    saveUsers(users);
-  }, [users]);
+  useEffect(() => { saveUsers(users); }, [users]);
 
+  // -------------------------------------------------------------------------
+  // LOGIN: autentica contra el backend y almacena el JWT en sessionStorage.
+  // Cada pestana del navegador tiene su propio sessionStorage, lo que garantiza
+  // sesiones independientes cuando varios usuarios operan al mismo tiempo.
+  // -------------------------------------------------------------------------
   async function login(username, password) {
-    // 1. Verificar si el usuario existe y está bloqueado
     const userData = users.find(u => u.username === username);
-    
-    if (userData && userData.bloqueado) {
-      return { ok: false, error: `Cuenta bloqueada. Por favor, contacta al administrador.` };
+    if (userData?.bloqueado) {
+      return { ok: false, error: 'Cuenta bloqueada. Contacta al administrador.' };
     }
 
     try {
-      // 2. Intentamos hablar con el servidor Backend
-      const response = await fetch('http://localhost:8000/login', {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
       });
 
-      // 3. Revisamos si el backend nos dijo que sí (status 200)
       if (response.ok) {
         const data = await response.json();
-        
-        // Resetear intentos fallidos en login exitoso
         if (userData) {
-          setUsers(prev => prev.map(u => 
+          setUsers(prev => prev.map(u =>
             u.username === username ? { ...u, intentosFallidos: 0, bloqueado: false } : u
           ));
         }
-        
-        // Armamos el objeto de usuario tal cual lo espera el Frontend
-        const loggedUser = {
-          username: username,
-          role: data.role,
-          token: data.access_token
-        };
-        
+        const loggedUser = { username, role: data.role, token: data.access_token };
+        // Guardar en sessionStorage de forma INMEDIATA antes de setUser,
+        // para que cualquier componente hijo que monte después encuentre el token.
+        sessionStorage.setItem('asrs_user', JSON.stringify(loggedUser));
         setUser(loggedUser);
         return { ok: true, user: loggedUser };
-      } 
-      
-      // 4. Si el backend nos rechazó, incrementar intentos (para operarios y admins)
+      }
+
       const errorData = await response.json();
       const puedeBloquearse = userData && (userData.role === 'operario' || userData.role === 'admin');
       if (puedeBloquearse) {
-        const currentAttempts = (userData.intentosFallidos ?? 0);
-        const newAttempts = currentAttempts + 1;
-        setUsers(prev => prev.map(u => 
-          u.username === username ? { 
-            ...u, 
-            intentosFallidos: newAttempts,
-            bloqueado: newAttempts >= 3
-          } : u
+        const newAttempts = (userData.intentosFallidos ?? 0) + 1;
+        setUsers(prev => prev.map(u =>
+          u.username === username
+            ? { ...u, intentosFallidos: newAttempts, bloqueado: newAttempts >= 3 }
+            : u
         ));
-        
-        if (newAttempts >= 3) {
-          return { ok: false, error: '🔒 Cuenta bloqueada por seguridad. Contacta al administrador.' };
-        }
-        return { ok: false, error: `⚠️ Usuario o contraseña incorrectos. Intentos: ${newAttempts}/3` };
+        if (newAttempts >= 3)
+          return { ok: false, error: 'Cuenta bloqueada por seguridad. Contacta al administrador.' };
+        return { ok: false, error: `Usuario o contrasena incorrectos. Intentos: ${newAttempts}/3` };
       }
-      return { ok: false, error: errorData.detail || 'Error al iniciar sesión' };
+      return { ok: false, error: errorData.detail || 'Error al iniciar sesion' };
 
-    } catch (error) {
-      // 5. Retornar error si el backend está inactivo en lugar de usar la base de datos interna simulada
-      console.error("Backend inactivo:", error);
-      return { ok: false, error: '❌ No se pudo conectar al servidor. El backend está inactivo o desconectado.' };
+    } catch {
+      return { ok: false, error: 'No se pudo conectar al servidor. El backend esta inactivo.' };
     }
   }
 
-  function logout() { setUser(null); }
-
-  function unlockUser(userId, requestingUserRole) {
-    // Solo superadmin puede desbloquear
-    if (requestingUserRole !== 'superadmin') {
-      return { ok: false, error: 'No tienes permiso para desbloquear usuarios' };
-    }
-    setUsers(prev => prev.map(u => 
-      u.id === userId ? { ...u, bloqueado: false, intentosFallidos: 0 } : u
-    ));
-    return { ok: true };
+  function logout() {
+    sessionStorage.removeItem('asrs_user');
+    setUser(null);
   }
 
-  function addUser({ nombre, username, password, role }) {
+  // -------------------------------------------------------------------------
+  // CREAR USUARIO: guarda en BD y en estado local.
+  // Envia el JWT del usuario autenticado para que el backend autorice la accion.
+  // -------------------------------------------------------------------------
+  async function addUser({ nombre, username, password, role }) {
     if (users.find(u => u.username === username)) {
       return { ok: false, error: 'El nombre de usuario ya existe' };
     }
-    const nivelAcceso = role === 'superadmin' ? 3 : role === 'admin' ? 2 : 1;
-    const newUser = {
+
+    let backend_id = null;
+    try {
+      const token = user?.token;
+      const res = await fetch(`${API_URL}/usuarios`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ username, password, role }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        backend_id = data.id ?? null;
+      }
+    } catch {
+      // Backend no disponible — guardar solo local
+    }
+
+    setUsers(prev => [...prev, {
       id: Date.now(),
       username: username.trim(),
       password,
       role,
       nombre: nombre.trim(),
-      nivelAcceso,
+      nivelAcceso: nivelPorRol(role),
       intentosFallidos: 0,
       bloqueado: false,
-    };
-    setUsers(prev => [...prev, newUser]);
+      backend_id,
+    }]);
     return { ok: true };
   }
 
-  function deleteUser(id) {
+  // -------------------------------------------------------------------------
+  // ELIMINAR USUARIO: borra de BD y de estado local.
+  // -------------------------------------------------------------------------
+  async function deleteUser(id) {
+    const target = users.find(u => u.id === id);
+    if (target?.backend_id) {
+      try {
+        await eliminarUsuarioBackend(target.backend_id);
+      } catch {
+        // Si falla la BD, igual eliminamos del estado local
+      }
+    }
     setUsers(prev => prev.filter(u => u.id !== id));
+  }
+
+  function unlockUser(userId, requestingUserRole) {
+    if (requestingUserRole !== 'superadmin')
+      return { ok: false, error: 'No tienes permiso para desbloquear usuarios' };
+    setUsers(prev => prev.map(u =>
+      u.id === userId ? { ...u, bloqueado: false, intentosFallidos: 0 } : u
+    ));
+    return { ok: true };
   }
 
   function updateUser(id, changes) {
