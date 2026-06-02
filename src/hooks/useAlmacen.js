@@ -17,15 +17,19 @@ export default function useAlmacen() {
         
         // Mapeamos los nombres de la Base de Datos a los que espera tu Frontend
         const paquetesMapeados = paquetesOriginales.map(item => {
-          // Extraemos la letra de categoría del SKU (ej: "CAJA-A100" -> "A")
-          const categoria = item.sku.includes('-A') ? 'A' : 
-                            item.sku.includes('-B') ? 'B' : 'C';
+          // Usa el campo category del backend si existe; si no, lo infiere del SKU
+          const categoria = (['A', 'B', 'C'].includes(item.category?.toUpperCase()))
+            ? item.category.toUpperCase()
+            : item.sku.includes('-A') ? 'A'
+            : item.sku.includes('-B') ? 'B'
+            : 'C';
 
           return {
             id: item.id,
             producto_id: item.sku,
-            trayectoria: 1, // Valor por defecto
-            ubicacion: `${categoria}${item.pos_x || 1}`, 
+            categoria,
+            trayectoria: 1,
+            ubicacion: `${categoria}${item.pos_x || 1}`,
             estado: item.status === 'stored' ? 'almacenado' : item.status,
             timestamp: item.created_at || new Date().toISOString()
           };

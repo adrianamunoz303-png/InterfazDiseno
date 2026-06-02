@@ -67,6 +67,24 @@
 .alm-bar-background { width: 100%; height: 6px; background: var(--color-neutral); border-radius: 3px; margin-top: 10px; }
 .alm-bar-fill       { height: 6px; background: var(--color-primary); border-radius: 3px; }
 
+/* ===== WMS ANIMACIONES GLOBALES ===== */
+@keyframes wmsToastIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes wmsPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+.wms-toast {
+  animation: wmsToastIn 0.3s ease forwards;
+}
+.wms-pulse {
+  display: inline-block;
+  animation: wmsPulse 1.4s ease-in-out infinite;
+}
+
 .alm-categories-summary { display: flex; justify-content: space-around; margin-top: 10px; font-weight: 600; font-size: var(--text-meta); }
 .cat-a { color: var(--color-ok); }
 .cat-b { color: var(--color-primary); }

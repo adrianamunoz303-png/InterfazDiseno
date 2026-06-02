@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { AuthProvider } from './context/AuthContext';
+import { WsProvider } from './context/WsContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import ToastNotifications from './components/common/ToastNotifications';
 import Login from './pages/Login';
 import Dashboard from './pages/dashboard';
 import Recepcion from './pages/recepcion';
@@ -12,7 +14,9 @@ import Robot from './pages/robot';
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <WsProvider>
+        <Router>
+          <ToastNotifications />
         <Routes>
           {/* Ruta pública */}
           <Route path="/login" element={<Login />} />
@@ -51,7 +55,8 @@ function App() {
           {/* Cualquier ruta desconocida → dashboard (si autenticado) */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Router>
+        </Router>
+      </WsProvider>
     </AuthProvider>
   );
 }

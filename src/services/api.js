@@ -79,3 +79,49 @@ export const crearProductoEnInventario = async (codigo, peso) => {
     }
     return res.json();
 };
+
+// Registra metadatos del producto antes de su ingreso físico (POST /productos)
+export const registrarProducto = async (sku, categoria, descripcion = '') => {
+    const res = await authFetch(`${API_URL}/productos`, {
+        method: 'POST',
+        body: JSON.stringify({ sku, categoria, descripcion }),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || 'Error al registrar producto');
+    }
+    return res.json();
+};
+
+// ---------------------------------------------------------------------------
+// Flota AGV
+// ---------------------------------------------------------------------------
+export const obtenerVehiculos = async () => {
+    try {
+        const res = await authFetch(`${API_URL}/agvs`);
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        return await res.json(); // array de { id, battery_level, status, pos_x, pos_y, last_connection }
+    } catch (error) {
+        console.error('Error al obtener flota AGV:', error);
+        return [];
+    }
+};
+
+export const actualizarAgv = async (agvId, data) => {
+    const res = await authFetch(`${API_URL}/agvs/${agvId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+    return res.json();
+};
+
+// Simula un escaneo QR publicando al tópico MQTT wms/infra/qr/lecturas (requiere endpoint /test/simular-qr en el backend)
+export const simularEscaneoQR = async (sku) => {
+    const res = await authFetch(`${API_URL}/test/simular-qr`, {
+        method: 'POST',
+        body: JSON.stringify({ sku, source: 'frontend_sim' }),
+    });
+    if (!res.ok) throw new Error('Endpoint de simulación no disponible en el backend');
+    return res.json();
+};
