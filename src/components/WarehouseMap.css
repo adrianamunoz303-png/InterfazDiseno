@@ -1,0 +1,250 @@
+.warehouse-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  margin-top: 24px;
+  overflow-x: auto;
+  font-family: "'Century Gothic', Candara, 'Trebuchet MS', sans-serif";
+}
+
+.warehouse-grid {
+  display: flex;
+  gap: 30px;
+  width: 100%;
+  max-width: 900px;
+  align-items: center;
+}
+
+/* Columna Izquierda */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 50px;
+  position: relative;
+}
+
+/* Conectores hacia el bloque principal */
+.left-column::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  width: 30px;
+  height: 6px;
+  background: #333;
+  transform: translateY(-50%);
+}
+
+.main-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Zonas Superiores */
+.top-areas {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 25px;
+  padding: 0 40px;
+  position: relative;
+}
+
+/* Conectores hacia abajo */
+.top-areas::after {
+  content: "";
+  position: absolute;
+  bottom: -25px;
+  left: 30%;
+  width: 6px;
+  height: 25px;
+  background: #333;
+}
+.top-areas::before {
+  content: "";
+  position: absolute;
+  bottom: -25px;
+  right: 25%;
+  width: 6px;
+  height: 25px;
+  background: #333;
+}
+
+/* Bloque central de almacenamiento */
+.storage-section {
+  position: relative;
+  border: 6px solid #333;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+/* Grilla interna de cajas */
+.shelf-row {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+}
+
+.box-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Líneas verticales internas */
+.vertical-connector {
+  width: 6px;
+  height: 40px;
+  background: #333;
+  z-index: 1;
+}
+
+/* Línea horizontal central (Path principal) */
+.middle-path {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: #333;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+/* Estilos de las Zonas (Recepcion, Banda, Pits, Despacho) */
+.zone-box {
+  border: 2px solid #333;
+  background: #fdfdfd;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  text-align: center;
+  color: #333;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+}
+
+.zone-pits { width: 220px; height: 60px; }
+.zone-despacho { width: 140px; height: 60px; }
+.zone-recepcion { height: 120px; width: 120px; }
+.zone-banda { height: 160px; width: 120px; }
+
+/* Estilos de las cajas (A1-A5, B1-B5) */
+.box {
+  width: 65px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  font-family: "'Roboto Mono', monospace";
+  border-radius: 4px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  margin-bottom: -2px; /* para sobreponer en el connector si es necesario */
+}
+
+/* Estados dinámicos */
+.box.empty {
+  background: #fdfdfd;
+  color: #c0c0c0;
+  border: 2px solid #e0e0e0;
+  box-shadow: none;
+}
+.box.empty:hover {
+  background: #f0f0f0;
+  border-color: #ccc;
+}
+
+.box.occupied-A { background: #e8f5ee; border: 2px solid #1A9E5A; color: #1A9E5A; }
+.box.occupied-B { background: #eff6ff; border: 2px solid #2563EB; color: #2563EB; }
+.box.occupied-C { background: #fff8e1; border: 2px solid #D48B00; color: #D48B00; }
+.box.in-transit {
+  background: #fff3e0;
+  border: 2px solid #D48B00;
+  color: #D48B00;
+  animation: pulse-border 1.5s infinite;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(212, 139, 0, 0.5); }
+  70% { box-shadow: 0 0 0 12px rgba(212, 139, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 139, 0, 0); }
+}
+
+.box:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+  z-index: 10 !important;
+}
+
+/* Tooltip (Hover info) */
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: #111;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: "'Century Gothic', Candara, sans-serif";
+  font-weight: normal;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  line-height: 1.4;
+}
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #111 transparent transparent transparent;
+}
+.box:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.badge-count {
+  background: #AD3333;
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-family: "'Roboto Mono', monospace";
+  font-weight: bold;
+  margin-top: 10px;
+  box-shadow: 0 2px 5px rgba(173, 51, 51, 0.4);
+}

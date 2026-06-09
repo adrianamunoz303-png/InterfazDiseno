@@ -26,9 +26,20 @@ async function authFetch(url, options = {}) {
 
     if (res.status === 401) {
         if (token) {
-            // Solo redirigir si HABIA un token (sesion expirada).
-            // Si no habia token, simplemente lanzar el error sin redirigir.
+            let detail = "";
+            try {
+                const errorData = await res.clone().json();
+                detail = errorData.detail || "";
+            } catch (e) {}
+
             sessionStorage.removeItem('asrs_user');
+            
+            if (detail === "SESSION_INVALIDATED") {
+                alert("Tu sesión fue cerrada porque se inició sesión desde otro dispositivo.");
+            } else {
+                alert("Tu sesión ha expirado. Por favor vuelve a iniciar sesión.");
+            }
+
             window.location.href = '/login';
         }
         throw new Error('No autorizado');

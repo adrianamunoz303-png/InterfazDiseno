@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { obtenerInventario } from '../services/api';
+import WarehouseMap from '../components/WarehouseMap';
 
 const PRIMARY  = '#003366';
 const ACCENT   = '#AD3333';
@@ -365,6 +366,9 @@ export default function Almacenamiento() {
           </div>
         )}
       </div>
+
+      {/* MAPA VISUAL DEL ALMACÉN */}
+      <WarehouseMap inventario={inventario} />
     </div>
   );
 }
