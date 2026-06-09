@@ -9,7 +9,9 @@ import Dashboard from './pages/dashboard';
 import Recepcion from './pages/recepcion';
 import Almacenamiento from './pages/Almacenamiento';
 import Dispensa from './pages/Dispensa';
+import CrearRobot from './pages/CrearRobot';
 import Robot from './pages/robot';
+import RobotDetalle from './pages/RobotDetalle';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
               <Dashboard />
             </ProtectedRoute>
           } />
+          <Route path="/robot/:id" element={<RobotDetalle />} />
+          
 
           {/* Módulos operativos — Operario y Super Admin */}
           <Route path="/Dispensa" element={
@@ -39,6 +43,7 @@ function App() {
               <Recepcion />
             </ProtectedRoute>
           } />
+          <Route path="/crear-robot" element={<CrearRobot />} /> 
           <Route path="/Robot" element={
             <ProtectedRoute allowedRoles={['operario', 'superadmin']}>
               <Robot />

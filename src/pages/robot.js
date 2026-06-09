@@ -18,6 +18,15 @@ const ESTADO_CFG = {
   error:    { label: 'Error',         color: ACCENT,  bg: '#fff0f0', icon: '⚠️' },
 };
 
+function getToken() {
+  try {
+    const user = JSON.parse(sessionStorage.getItem('asrs_user') || '{}');
+    return user.token || '';
+  } catch {
+    return '';
+  }
+}
+
 function BatteryBar({ nivel }) {
   const pct   = Math.max(0, Math.min(100, Number(nivel) || 0));
   const color = pct < 20 ? ACCENT : pct < 50 ? WARN : GREEN;
@@ -38,7 +47,7 @@ function BatteryBar({ nivel }) {
   );
 }
 
-function AgvCard({ data }) {
+function AgvCard({ data, onEliminar }) {
   const cfg     = ESTADO_CFG[data.status] || ESTADO_CFG.idle;
   const secsAgo = data.last_connection
     ? Math.round((Date.now() - new Date(data.last_connection).getTime()) / 1000)
@@ -99,14 +108,32 @@ function AgvCard({ data }) {
             : `Hace ${Math.round(secsAgo / 60)}min`
           : 'Sin conexión registrada'}
       </div>
+
+      {/* Botón Eliminar */}
+      <button
+        onClick={() => onEliminar(data.id)}
+        style={{
+          width: '100%', padding: '10px',
+          background: 'white', color: ACCENT,
+          border: `1.5px solid ${ACCENT}`, borderRadius: '8px',
+          fontSize: '13px', fontWeight: 700, fontFamily: FONT,
+          cursor: 'pointer', transition: 'all 0.2s',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+        }}
+        onMouseEnter={e => { e.target.style.background = ACCENT; e.target.style.color = 'white'; }}
+        onMouseLeave={e => { e.target.style.background = 'white'; e.target.style.color = ACCENT; }}
+      >
+        🗑️ Eliminar Robot
+      </button>
     </div>
   );
 }
 
 export default function Robot() {
   const wsCtx    = useWs();
-  const [dbAgvs, setDbAgvs] = useState([]);  // datos de PostgreSQL (polling)
+  const [dbAgvs, setDbAgvs] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [eliminando, setEliminando] = useState(null);
   const [currentTime, setCurrentTime] = useState(
     new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   );
@@ -132,11 +159,38 @@ export default function Robot() {
     return () => clearInterval(t);
   }, [fetchAgvs]);
 
+  // Función eliminar robot
+  const eliminarRobot = useCallback(async (robotId) => {
+    if (!window.confirm(`¿Eliminar ${robotId} permanentemente?\n\nEsta acción no se puede deshacer.`)) return;
+    
+    setEliminando(robotId);
+    try {
+      const res = await fetch(`http://localhost:8000/robots/${robotId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
+      
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Error al eliminar el robot');
+      }
+      
+      alert(`✅ Robot ${robotId} eliminado correctamente`);
+      fetchAgvs(); // Recargar la lista
+    } catch (err) {
+      alert('❌ Error: ' + err.message);
+    } finally {
+      setEliminando(null);
+    }
+  }, [fetchAgvs]);
+
   // Fusionar datos: WebSocket actualiza en tiempo real encima de los datos de BD
   const wsData   = wsCtx?.agvData || {};
   const wsStatus = wsCtx?.wsStatus || 'disconnected';
 
-  // Construye la lista final: base desde BD, sobreescrita con telemetría WS live
   const agvList = dbAgvs.map(v => {
     const live = wsData[v.id];
     if (!live) return v;
@@ -150,7 +204,6 @@ export default function Robot() {
     };
   });
 
-  // Si WS tiene AGVs que no están en BD aún, agregarlos
   Object.keys(wsData).forEach(id => {
     if (!agvList.find(v => v.id === id)) {
       const d = wsData[id];
@@ -205,6 +258,11 @@ export default function Robot() {
           <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
           Cargando flota AGV desde base de datos...
         </div>
+      ) : agvList.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px', color: '#aaa' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>🤖</div>
+          No hay robots registrados en el sistema
+        </div>
       ) : (
         <div style={{
           display: 'grid',
@@ -212,7 +270,13 @@ export default function Robot() {
           gap: '20px',
           marginBottom: '28px',
         }}>
-          {agvList.map(v => <AgvCard key={v.id} data={v} />)}
+          {agvList.map(v => (
+            <AgvCard 
+              key={v.id} 
+              data={v} 
+              onEliminar={eliminando === v.id ? null : eliminarRobot}
+            />
+          ))}
         </div>
       )}
 
